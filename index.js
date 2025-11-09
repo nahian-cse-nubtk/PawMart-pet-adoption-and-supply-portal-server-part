@@ -20,7 +20,43 @@ app.use(express.json())
 async function run(){
     try{
         await client.connect();
-        
+        const pawmart_db = client.db("pawmart_db")
+        const categoriesCollection =pawmart_db.collection("catagories")
+
+
+        app.get('/categories', async(req,res)=>{
+            const cursor = categoriesCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+        app.get('/categories/recentProdcut',async(req,res)=>{
+            
+            const query = {}
+            const cursor = categoriesCollection.find(query).sort({date: -1}).limit(6);
+            const result = await cursor.toArray()
+            res.send(result);
+        })
+        app.get('/categories/:category', async(req,res)=>{
+            const categoryRequest = req.params.category;
+            const query ={category: categoryRequest}
+
+            const cursor = categoriesCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.get('/onlycategories', async(req,res)=>{
+    const docs = await categoriesCollection.aggregate([
+      { $group: { _id: "$category" } },
+      { $match: { _id: { $ne: null } } },
+      { $project: { _id: 0, category: "$_id" } }
+    ]).toArray();
+    const categories = docs.map(d => d.category);
+    return res.json(categories);
+
+        })
+
+
         await client.db("admin").command({ping: 1})
         console.log("Connection successfull")
     }
