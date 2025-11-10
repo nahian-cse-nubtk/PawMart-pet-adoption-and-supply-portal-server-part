@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const app = express()
 const cors = require('cors');
@@ -34,11 +34,18 @@ async function run(){
             const result = await cursor.toArray();
             res.send(result);
         })
+
         app.get('/categories/recentProdcut',async(req,res)=>{
 
             const query = {}
             const cursor = categoriesCollection.find(query).sort({date: -1}).limit(6);
             const result = await cursor.toArray()
+            res.send(result);
+        })
+        app.get('/categories/:categoryId', async(req,res)=>{
+            const id = req.params.categoryId;
+            const query ={_id: new ObjectId(id)}
+            const result = await categoriesCollection.findOne(query);
             res.send(result);
         })
         app.get('/categories/:category', async(req,res)=>{
@@ -49,6 +56,8 @@ async function run(){
             const result = await cursor.toArray();
             res.send(result);
         })
+
+
 
         app.get('/onlycategories', async(req,res)=>{
     const docs = await categoriesCollection.aggregate([
@@ -65,6 +74,25 @@ async function run(){
             const data = req.body;
             console.log(data);
             const result = await categoriesCollection.insertOne(data);
+            res.send(result);
+        })
+        app.patch('/categories/:categoryId', async(req,res)=>{
+            const id = req.params.categoryId;
+
+            const updatedData = req.body;
+
+            const updateDoc={
+                $set: updatedData
+            }
+            const query ={_id: new ObjectId(id)}
+            const result = await categoriesCollection.updateOne(query,updateDoc);
+            res.send(result);
+        })
+        app.delete('/categories/:categoryId', async(req,res)=>{
+            const id = req.params.categoryId;
+
+            const query ={_id: new ObjectId(id)}
+            const result = await categoriesCollection.deleteOne(query);
             res.send(result);
         })
 
