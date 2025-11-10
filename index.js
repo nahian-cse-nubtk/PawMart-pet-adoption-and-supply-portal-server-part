@@ -25,12 +25,17 @@ async function run(){
 
 
         app.get('/categories', async(req,res)=>{
-            const cursor = categoriesCollection.find();
+            const email = req.query.email
+            const query ={}
+            if(email){
+                query.email = email;
+            }
+            const cursor = categoriesCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         })
         app.get('/categories/recentProdcut',async(req,res)=>{
-            
+
             const query = {}
             const cursor = categoriesCollection.find(query).sort({date: -1}).limit(6);
             const result = await cursor.toArray()
@@ -54,6 +59,13 @@ async function run(){
     const categories = docs.map(d => d.category);
     return res.json(categories);
 
+        })
+
+        app.post('/categories', async(req,res)=>{
+            const data = req.body;
+            console.log(data);
+            const result = await categoriesCollection.insertOne(data);
+            res.send(result);
         })
 
 
