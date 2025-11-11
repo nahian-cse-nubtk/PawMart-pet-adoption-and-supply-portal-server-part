@@ -22,7 +22,7 @@ async function run(){
         await client.connect();
         const pawmart_db = client.db("pawmart_db")
         const categoriesCollection =pawmart_db.collection("catagories")
-
+        const ordersCollection = pawmart_db.collection("orders")
 
         app.get('/categories', async(req,res)=>{
             const email = req.query.email
@@ -44,6 +44,7 @@ async function run(){
         })
         app.get('/categories/:categoryId', async(req,res)=>{
             const id = req.params.categoryId;
+
             const query ={_id: new ObjectId(id)}
             const result = await categoriesCollection.findOne(query);
             res.send(result);
@@ -72,10 +73,16 @@ async function run(){
 
         app.post('/categories', async(req,res)=>{
             const data = req.body;
-            console.log(data);
+
             const result = await categoriesCollection.insertOne(data);
             res.send(result);
         })
+        app.post('/orders',async(req,res)=>{
+            const orderData = req.body;
+            const result = await ordersCollection.insertOne(orderData)
+            res.send(result);
+        })
+
         app.patch('/categories/:categoryId', async(req,res)=>{
             const id = req.params.categoryId;
 
