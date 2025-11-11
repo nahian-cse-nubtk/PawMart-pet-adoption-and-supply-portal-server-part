@@ -82,6 +82,16 @@ async function run(){
             const result = await ordersCollection.insertOne(orderData)
             res.send(result);
         })
+        app.get('/orders', async(req,res)=>{
+            const email = req.query.email;
+            const query= {}
+            if(email){
+                query.email= email;
+            }
+            const cursor = ordersCollection.find(query)
+            const result = await cursor.toArray();
+            res.send(result)
+        })
 
         app.patch('/categories/:categoryId', async(req,res)=>{
             const id = req.params.categoryId;
