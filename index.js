@@ -35,18 +35,12 @@ async function run(){
             res.send(result);
         })
 
+
         app.get('/categories/recentProdcut',async(req,res)=>{
 
             const query = {}
             const cursor = categoriesCollection.find(query).sort({date: -1}).limit(6);
             const result = await cursor.toArray()
-            res.send(result);
-        })
-        app.get('/categories/:categoryId', async(req,res)=>{
-            const id = req.params.categoryId;
-
-            const query ={_id: new ObjectId(id)}
-            const result = await categoriesCollection.findOne(query);
             res.send(result);
         })
         app.get('/categories/:category', async(req,res)=>{
@@ -57,6 +51,15 @@ async function run(){
             const result = await cursor.toArray();
             res.send(result);
         })
+        app.get('/categories/category/:categoryId', async(req,res)=>{
+            const id = req.params.categoryId;
+
+            const query ={_id: new ObjectId(id)}
+            const result = await categoriesCollection.findOne(query);
+            res.send(result);
+        })
+
+
 
 
 
@@ -70,6 +73,7 @@ async function run(){
     return res.json(categories);
 
         })
+
 
         app.post('/categories', async(req,res)=>{
             const data = req.body;
