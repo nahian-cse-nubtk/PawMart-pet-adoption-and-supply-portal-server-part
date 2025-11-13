@@ -1,8 +1,16 @@
 require('dotenv').config()
+const admin = require("firebase-admin");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const app = express()
 const cors = require('cors');
+
+
+const serviceAccount = require("./pawmart-firebase-admin-sdk.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
@@ -17,6 +25,27 @@ const client = new MongoClient(uri, {
 app.use(cors())
 app.use(express.json())
 
+const firebaseTokenVerification =async(req,res,next)=>{
+    const header = req.headers.authorization;
+    if(!header){
+        return res.status(401).send({message: 'Unauthorized Access'})
+    }
+    const token = header.split(' ')[1]
+    if(!token){
+        return res.status(401).send({message: 'Unauthorized Access'})
+    }
+    try{
+        const decoded = await admin.auth().verifyIdToken(token)
+        req.token_email= decoded.email;
+    }
+    catch(error){
+    return res.status(401).send({message: 'Unauthorized Access'})
+    }
+
+    next();
+
+}
+
 async function run(){
     try{
         await client.connect();
@@ -25,11 +54,19 @@ async function run(){
         const ordersCollection = pawmart_db.collection("orders")
 
         app.get('/categories', async(req,res)=>{
+            const cursor = categoriesCollection.find()
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.get('/categories/email',firebaseTokenVerification, async(req,res)=>{
             const email = req.query.email
-            const query ={}
-            if(email){
-                query.email = email;
+            if(email!==req.token_email){
+                return res.status(403).send({message: 'Access Forbidden'})
+
             }
+            const query ={email:email}
+
             const cursor = categoriesCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
@@ -51,7 +88,7 @@ async function run(){
             const result = await cursor.toArray();
             res.send(result);
         })
-        app.get('/categories/category/:categoryId', async(req,res)=>{
+        app.get('/categories/category/:categoryId',firebaseTokenVerification, async(req,res)=>{
             const id = req.params.categoryId;
 
             const query ={_id: new ObjectId(id)}
@@ -75,29 +112,32 @@ async function run(){
         })
 
 
-        app.post('/categories', async(req,res)=>{
+        app.post('/categories',firebaseTokenVerification, async(req,res)=>{
             const data = req.body;
 
             const result = await categoriesCollection.insertOne(data);
             res.send(result);
         })
-        app.post('/orders',async(req,res)=>{
+        app.post('/orders',firebaseTokenVerification,async(req,res)=>{
             const orderData = req.body;
             const result = await ordersCollection.insertOne(orderData)
             res.send(result);
         })
-        app.get('/orders', async(req,res)=>{
+        app.get('/orders',firebaseTokenVerification, async(req,res)=>{
             const email = req.query.email;
             const query= {}
             if(email){
                 query.email= email;
+                if(email!==req.token_email){
+                    return res.status(403).send({message: 'Access Forbidden'})
+                }
             }
             const cursor = ordersCollection.find(query)
             const result = await cursor.toArray();
             res.send(result)
         })
 
-        app.patch('/categories/:categoryId', async(req,res)=>{
+        app.patch('/categories/:categoryId', firebaseTokenVerification, async(req,res)=>{
             const id = req.params.categoryId;
 
             const updatedData = req.body;
@@ -109,7 +149,7 @@ async function run(){
             const result = await categoriesCollection.updateOne(query,updateDoc);
             res.send(result);
         })
-        app.delete('/categories/:categoryId', async(req,res)=>{
+        app.delete('/categories/:categoryId',firebaseTokenVerification, async(req,res)=>{
             const id = req.params.categoryId;
 
             const query ={_id: new ObjectId(id)}
