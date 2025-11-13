@@ -5,8 +5,8 @@ const express = require('express');
 const app = express()
 const cors = require('cors');
 
-
-const serviceAccount = require("./pawmart-firebase-admin-sdk.json");
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString("utf8");
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -48,7 +48,7 @@ const firebaseTokenVerification =async(req,res,next)=>{
 
 async function run(){
     try{
-        await client.connect();
+        // await client.connect();
         const pawmart_db = client.db("pawmart_db")
         const categoriesCollection =pawmart_db.collection("catagories")
         const ordersCollection = pawmart_db.collection("orders")
@@ -158,8 +158,8 @@ async function run(){
         })
 
 
-        await client.db("admin").command({ping: 1})
-        console.log("Connection successfull")
+        // await client.db("admin").command({ping: 1})
+        // console.log("Connection successfull")
     }
     finally{
         //
