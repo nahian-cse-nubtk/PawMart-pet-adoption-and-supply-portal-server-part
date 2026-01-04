@@ -91,7 +91,7 @@ async function run(){
             const result = await cursor.toArray();
             res.send(result);
         })
-        app.get('/categories/category/:categoryId',firebaseTokenVerification, async(req,res)=>{
+        app.get('/categories/category/:categoryId', async(req,res)=>{
             const id = req.params.categoryId;
 
             const query ={_id: new ObjectId(id)}
