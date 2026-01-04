@@ -54,9 +54,12 @@ async function run(){
         const ordersCollection = pawmart_db.collection("orders")
 
         app.get('/categories', async(req,res)=>{
-            const cursor = categoriesCollection.find()
+             const limit = req.query.limit
+             const skip = req.query.skip
+            const cursor = categoriesCollection.find().skip(parseInt(skip)).limit(parseInt(limit))
             const result = await cursor.toArray();
-            res.send(result);
+            const total = await categoriesCollection.estimatedDocumentCount()
+            res.send({result,total});
         })
 
         app.get('/categories/email',firebaseTokenVerification, async(req,res)=>{
@@ -76,7 +79,7 @@ async function run(){
         app.get('/categories/recentProdcut',async(req,res)=>{
 
             const query = {}
-            const cursor = categoriesCollection.find(query).sort({date: -1}).limit(6);
+            const cursor = categoriesCollection.find(query).sort({date: -1}).limit(8);
             const result = await cursor.toArray()
             res.send(result);
         })
